@@ -4,16 +4,18 @@ import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import be.rubenvermeulen.android.redditapp.helpers.Category;
 import be.rubenvermeulen.android.redditapp.helpers.EndlessRecyclerOnScrollListener;
+import be.rubenvermeulen.android.redditapp.helpers.Subreddit;
 import be.rubenvermeulen.android.redditapp.models.Result;
 import be.rubenvermeulen.android.redditapp.models.Topic;
 import be.rubenvermeulen.android.redditapp.services.RedditService;
@@ -29,6 +31,8 @@ public class MainActivity extends AppCompatActivity
 
     @BindView(R.id.topics)
     RecyclerView rvTopics;
+    @BindView(R.id.swipeRefresh)
+    SwipeRefreshLayout swipeRefresh;
 
     private final int THRESHOLD = 20;
 
@@ -37,12 +41,15 @@ public class MainActivity extends AppCompatActivity
     private RedditService service;
     private boolean firstLoad = true;
     private String after = null;
+    private Subreddit subreddit;
+    private Category category = Category.hot;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
+
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -66,6 +73,16 @@ public class MainActivity extends AppCompatActivity
                 .build();
 
         service = retrofit.create(RedditService.class);
+
+        // Swipe refresh
+        swipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                after = null;
+
+                loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
+            }
+        });
     }
 
     @Override
@@ -105,48 +122,51 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        int index = 0;
+        int index;
 
-        Call<Result> call;
+        swipeRefresh.setRefreshing(true);
 
         if (id == R.id.askReddit) {
-            call = service.askReddit(after, THRESHOLD);
+            subreddit = Subreddit.AskReddit;
             index = 0;
         }
         else if (id == R.id.funny) {
-            call = service.funny(after, THRESHOLD);
+            subreddit = Subreddit.funny;
             index = 1;
         }
         else if (id == R.id.todayILearned) {
-            call = service.todayILearned(after, THRESHOLD);
+            subreddit = Subreddit.todayilearned;
             index = 2;
         }
         else if (id == R.id.science) {
-            call = service.science(after, THRESHOLD);
+            subreddit = Subreddit.science;
             index = 3;
         }
         else if (id == R.id.pics) {
-            call = service.pics(after, THRESHOLD);
+            subreddit = Subreddit.pics;
             index = 4;
         }
         else if (id == R.id.worldNews) {
-            call = service.worldNews(after, THRESHOLD);
+            subreddit = Subreddit.worldnews;
             index = 5;
         }
         else if (id == R.id.announcements) {
-            call = service.announcements(after, THRESHOLD);
+            subreddit = Subreddit.announcements;
             index = 6;
         }
         else if (id == R.id.gaming) {
-            call = service.gaming(after, THRESHOLD);
+            subreddit = Subreddit.gaming;
             index = 7;
         }
         else {
-            call = service.askReddit(after, THRESHOLD);
+            subreddit = Subreddit.AskReddit;
             index = 0;
         }
 
         firstLoad = true;
+
+        Call<Result> call = service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD);
+
         loadSubreddit(call);
         toolbar.setTitle(DataContext.subreddits[index]);
 
@@ -170,13 +190,14 @@ public class MainActivity extends AppCompatActivity
                         @Override
                         public void onLoadMore(int currentPage) {
                             TopicsAdapter adapter = (TopicsAdapter) rvTopics.getAdapter();
-                            Topic t = adapter.getItem(currentPage * THRESHOLD);
+
+                            Topic t = adapter.getItem(adapter.getItemCount() - 1);
 
                             after = t.getData().getName();
 
-                            Log.e("INFO", "Currentpage: " + currentPage);
+                            swipeRefresh.setRefreshing(true);
 
-                            loadSubreddit(service.askReddit(after, THRESHOLD));
+                            loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
                         }
                     });
                 }
@@ -185,6 +206,8 @@ public class MainActivity extends AppCompatActivity
 
                     adapter.addItems(result.getData().getChildren());
                 }
+
+                swipeRefresh.setRefreshing(false);
             }
 
             @Override
