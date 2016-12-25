@@ -60,7 +60,7 @@ public class TopicsAdapter extends RecyclerView.Adapter {
         TopicData topicData = topics.get(position).getData();
         ViewHolder viewHolder = (ViewHolder) holder;
 
-        if ( ! topicData.getThumbnail().equals("self") && ! topicData.getThumbnail().equals("default") && ! topicData.getThumbnail().equals("")) {
+        if (topicData.getThumbnail().startsWith("http")) {
             Picasso.with(ctx).load(topicData.getThumbnail()).into(viewHolder.ivCover);
             viewHolder.ivCover.setVisibility(View.VISIBLE);
         }
