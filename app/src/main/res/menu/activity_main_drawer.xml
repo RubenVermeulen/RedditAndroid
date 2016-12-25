@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:title="Subreddits">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_one"
+                    android:title="/r/AskReddit" />
+                <item
+                    android:id="@+id/nav_two"
+                    android:title="/r/funny" />
+                <item
+                    android:id="@+id/nav_three"
+                    android:title="/r/todaylearned" />
+                <item
+                    android:id="@+id/nav_four"
+                    android:title="/r/science" />
+                <item
+                    android:id="@+id/nav_five"
+                    android:title="/r/pics" />
+                <item
+                    android:id="@+id/nav_six"
+                    android:title="/r/worldnews" />
+                <item
+                    android:id="@+id/nav_seven"
+                    android:title="/r/announcements" />
+                <item
+                    android:id="@+id/nav_eighth"
+                    android:title="/r/gaming" />
+            </group>
+        </menu>
+    </item>
+
+</menu>
