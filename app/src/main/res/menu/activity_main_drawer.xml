@@ -5,28 +5,28 @@
         <menu>
             <group android:checkableBehavior="single">
                 <item
-                    android:id="@+id/nav_one"
+                    android:id="@+id/askReddit"
                     android:title="/r/AskReddit" />
                 <item
-                    android:id="@+id/nav_two"
+                    android:id="@+id/funny"
                     android:title="/r/funny" />
                 <item
-                    android:id="@+id/nav_three"
-                    android:title="/r/todaylearned" />
+                    android:id="@+id/todayILearned"
+                    android:title="/r/todayilearned" />
                 <item
-                    android:id="@+id/nav_four"
+                    android:id="@+id/science"
                     android:title="/r/science" />
                 <item
-                    android:id="@+id/nav_five"
+                    android:id="@+id/pics"
                     android:title="/r/pics" />
                 <item
-                    android:id="@+id/nav_six"
+                    android:id="@+id/worldNews"
                     android:title="/r/worldnews" />
                 <item
-                    android:id="@+id/nav_seven"
+                    android:id="@+id/announcements"
                     android:title="/r/announcements" />
                 <item
-                    android:id="@+id/nav_eighth"
+                    android:id="@+id/gaming"
                     android:title="/r/gaming" />
             </group>
         </menu>

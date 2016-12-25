@@ -1,26 +1,43 @@
 package be.rubenvermeulen.android.redditapp;
 
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
-import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import be.rubenvermeulen.android.redditapp.models.Result;
+import be.rubenvermeulen.android.redditapp.services.RedditService;
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
+
+    @BindView(R.id.topics)
+    RecyclerView rvTopics;
+
+    private Toolbar toolbar;
+    private LinearLayoutManager layoutManager;
+    private RedditService service;
+    private boolean firstLoad = true;
+    private boolean loading = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -31,6 +48,19 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        ButterKnife.bind(this);
+
+        layoutManager = new LinearLayoutManager(this);
+
+        rvTopics.setLayoutManager(layoutManager);
+
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://www.reddit.com/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+
+        service = retrofit.create(RedditService.class);
     }
 
     @Override
@@ -70,19 +100,68 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
+        int index = 0;
 
-//        if (id == R.id.nav_camera) {
-//            // Handle the camera action
-//        } else if (id == R.id.nav_gallery) {
-//
-//        } else if (id == R.id.nav_slideshow) {
-//
-//        } else if (id == R.id.nav_manage) {
-//
-//        }
+        Call<Result> call;
+
+        if (id == R.id.askReddit) {
+            call = service.askReddit();
+            index = 0;
+        }
+        else if (id == R.id.funny) {
+            call = service.funny();
+            index = 1;
+        }
+        else if (id == R.id.todayILearned) {
+            call = service.todayILearned();
+            index = 2;
+        }
+        else if (id == R.id.science) {
+            call = service.science();
+            index = 3;
+        }
+        else if (id == R.id.pics) {
+            call = service.pics();
+            index = 4;
+        }
+        else if (id == R.id.worldNews) {
+            call = service.worldNews();
+            index = 5;
+        }
+        else if (id == R.id.announcements) {
+            call = service.announcements();
+            index = 6;
+        }
+        else if (id == R.id.gaming) {
+            call = service.gaming();
+            index = 7;
+        }
+        else {
+            call = service.askReddit();
+            index = 0;
+        }
+
+        loadSubreddit(call);
+        toolbar.setTitle(DataContext.subreddits[index]);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    private void loadSubreddit(Call<Result> call) {
+        call.enqueue(new Callback<Result>() {
+            @Override
+            public void onResponse(Call<Result> call, retrofit2.Response<Result> response) {
+                Result result = response.body();
+
+                rvTopics.setAdapter(new TopicsAdapter(MainActivity.this, result.getData().getChildren()));
+            }
+
+            @Override
+            public void onFailure(Call<Result> call, Throwable t) {
+
+            }
+        });
     }
 }

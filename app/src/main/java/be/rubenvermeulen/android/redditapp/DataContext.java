@@ -4,7 +4,7 @@ public class DataContext {
     public static String[] subreddits = {
             "AskReddit",
             "funny",
-            "todaylearned",
+            "todayilearned",
             "science",
             "pics",
             "worldnews",
