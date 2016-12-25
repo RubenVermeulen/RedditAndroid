@@ -77,4 +77,18 @@ public class TopicsAdapter extends RecyclerView.Adapter {
     public int getItemCount() {
         return topics.size();
     }
+
+    public void addItem(Topic topic) {
+        topics.add(topic);
+    }
+
+    public void addItems(List<Topic> topics) {
+        int start = this.topics.size();
+        this.topics.addAll(topics);
+        notifyItemRangeInserted(start, topics.size());
+    }
+
+    public Topic getItem(int index) {
+        return topics.get(index);
+    }
 }

@@ -9,10 +9,13 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import be.rubenvermeulen.android.redditapp.helpers.EndlessRecyclerOnScrollListener;
 import be.rubenvermeulen.android.redditapp.models.Result;
+import be.rubenvermeulen.android.redditapp.models.Topic;
 import be.rubenvermeulen.android.redditapp.services.RedditService;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,11 +30,13 @@ public class MainActivity extends AppCompatActivity
     @BindView(R.id.topics)
     RecyclerView rvTopics;
 
+    private final int THRESHOLD = 20;
+
     private Toolbar toolbar;
     private LinearLayoutManager layoutManager;
     private RedditService service;
     private boolean firstLoad = true;
-    private boolean loading = true;
+    private String after = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,42 +110,43 @@ public class MainActivity extends AppCompatActivity
         Call<Result> call;
 
         if (id == R.id.askReddit) {
-            call = service.askReddit();
+            call = service.askReddit(after, THRESHOLD);
             index = 0;
         }
         else if (id == R.id.funny) {
-            call = service.funny();
+            call = service.funny(after, THRESHOLD);
             index = 1;
         }
         else if (id == R.id.todayILearned) {
-            call = service.todayILearned();
+            call = service.todayILearned(after, THRESHOLD);
             index = 2;
         }
         else if (id == R.id.science) {
-            call = service.science();
+            call = service.science(after, THRESHOLD);
             index = 3;
         }
         else if (id == R.id.pics) {
-            call = service.pics();
+            call = service.pics(after, THRESHOLD);
             index = 4;
         }
         else if (id == R.id.worldNews) {
-            call = service.worldNews();
+            call = service.worldNews(after, THRESHOLD);
             index = 5;
         }
         else if (id == R.id.announcements) {
-            call = service.announcements();
+            call = service.announcements(after, THRESHOLD);
             index = 6;
         }
         else if (id == R.id.gaming) {
-            call = service.gaming();
+            call = service.gaming(after, THRESHOLD);
             index = 7;
         }
         else {
-            call = service.askReddit();
+            call = service.askReddit(after, THRESHOLD);
             index = 0;
         }
 
+        firstLoad = true;
         loadSubreddit(call);
         toolbar.setTitle(DataContext.subreddits[index]);
 
@@ -155,7 +161,30 @@ public class MainActivity extends AppCompatActivity
             public void onResponse(Call<Result> call, retrofit2.Response<Result> response) {
                 Result result = response.body();
 
-                rvTopics.setAdapter(new TopicsAdapter(MainActivity.this, result.getData().getChildren()));
+                if (firstLoad) {
+                    firstLoad = false;
+
+                    rvTopics.setAdapter(new TopicsAdapter(MainActivity.this, result.getData().getChildren()));
+
+                    rvTopics.addOnScrollListener(new EndlessRecyclerOnScrollListener(layoutManager) {
+                        @Override
+                        public void onLoadMore(int currentPage) {
+                            TopicsAdapter adapter = (TopicsAdapter) rvTopics.getAdapter();
+                            Topic t = adapter.getItem(currentPage * THRESHOLD);
+
+                            after = t.getData().getName();
+
+                            Log.e("INFO", "Currentpage: " + currentPage);
+
+                            loadSubreddit(service.askReddit(after, THRESHOLD));
+                        }
+                    });
+                }
+                else {
+                    TopicsAdapter adapter = (TopicsAdapter) rvTopics.getAdapter();
+
+                    adapter.addItems(result.getData().getChildren());
+                }
             }
 
             @Override

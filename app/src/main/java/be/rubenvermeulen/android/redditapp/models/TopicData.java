@@ -5,6 +5,7 @@ import android.text.format.DateUtils;
 import com.google.gson.annotations.SerializedName;
 
 public class TopicData {
+    private String name;
     private String title;
     private String author;
     private long created;
@@ -16,6 +17,14 @@ public class TopicData {
 
     private String url;
     private int ups;
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getTitle() {
         return title;
