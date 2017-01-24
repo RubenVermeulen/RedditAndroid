@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void onRefresh() {
                 after = null;
-
+                rvTopics.removeAllViews();
                 loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
             }
         });
@@ -110,7 +110,12 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_reload) {
+            swipeRefresh.setRefreshing(true);
+            after = null;
+            rvTopics.removeAllViews();
+            loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
+
             return true;
         }
 

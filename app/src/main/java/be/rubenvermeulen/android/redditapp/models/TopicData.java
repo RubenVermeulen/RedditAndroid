@@ -4,7 +4,9 @@ import android.text.format.DateUtils;
 
 import com.google.gson.annotations.SerializedName;
 
-public class TopicData {
+import java.io.Serializable;
+
+public class TopicData implements Serializable {
     private String name;
     private String title;
     private String author;
