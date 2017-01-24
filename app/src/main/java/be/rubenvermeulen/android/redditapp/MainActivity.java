@@ -1,5 +1,6 @@
 package be.rubenvermeulen.android.redditapp;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -10,6 +11,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -36,7 +38,6 @@ public class MainActivity extends AppCompatActivity
 
     private final int THRESHOLD = 20;
 
-    private Toolbar toolbar;
     private LinearLayoutManager layoutManager;
     private RedditService service;
     private boolean firstLoad = true;
@@ -48,8 +49,8 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
 
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -83,6 +84,16 @@ public class MainActivity extends AppCompatActivity
                 loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
             }
         });
+
+        // Get saved state
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        String value = sharedPreferences.getString("subreddit", null);
+
+        if (value != null) {
+            subreddit = Subreddit.valueOf(value);
+            loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
+            getSupportActionBar().setTitle(subreddit.toString());
+        }
     }
 
     @Override
@@ -127,45 +138,35 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-        int index;
 
         swipeRefresh.setRefreshing(true);
 
         if (id == R.id.askReddit) {
             subreddit = Subreddit.AskReddit;
-            index = 0;
         }
         else if (id == R.id.funny) {
             subreddit = Subreddit.funny;
-            index = 1;
         }
         else if (id == R.id.todayILearned) {
             subreddit = Subreddit.todayilearned;
-            index = 2;
         }
         else if (id == R.id.science) {
             subreddit = Subreddit.science;
-            index = 3;
         }
         else if (id == R.id.pics) {
             subreddit = Subreddit.pics;
-            index = 4;
         }
         else if (id == R.id.worldNews) {
             subreddit = Subreddit.worldnews;
-            index = 5;
         }
         else if (id == R.id.announcements) {
             subreddit = Subreddit.announcements;
-            index = 6;
         }
         else if (id == R.id.gaming) {
             subreddit = Subreddit.gaming;
-            index = 7;
         }
         else {
             subreddit = Subreddit.AskReddit;
-            index = 0;
         }
 
         firstLoad = true;
@@ -173,7 +174,7 @@ public class MainActivity extends AppCompatActivity
         Call<Result> call = service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD);
 
         loadSubreddit(call);
-        toolbar.setTitle(DataContext.subreddits[index]);
+        getSupportActionBar().setTitle(subreddit.toString());
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -220,5 +221,20 @@ public class MainActivity extends AppCompatActivity
 
             }
         });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        Log.e("STOP", "stopped");
+
+        SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
+        editor.putString("subreddit", subreddit.toString());
+        editor.apply();
+
+        Log.e("SHARED", "Written");
     }
 }
