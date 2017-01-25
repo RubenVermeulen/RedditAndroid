@@ -103,4 +103,8 @@ public class TopicsAdapter extends RecyclerView.Adapter {
     public Topic getItem(int index) {
         return topics.get(index);
     }
+
+    public List<Topic> getTopics() {
+        return topics;
+    }
 }

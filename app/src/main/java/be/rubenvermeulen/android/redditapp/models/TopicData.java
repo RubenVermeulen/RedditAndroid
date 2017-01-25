@@ -4,9 +4,15 @@ import android.text.format.DateUtils;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.io.Serializable;
+import org.greenrobot.greendao.annotation.Entity;
 
+import java.io.Serializable;
+import org.greenrobot.greendao.annotation.Generated;
+
+@Entity
 public class TopicData implements Serializable {
+    private static final long serialVersionUID = 0;
+
     private String name;
     private String title;
     private String author;
@@ -19,6 +25,25 @@ public class TopicData implements Serializable {
 
     private String url;
     private int ups;
+
+    @Generated(hash = 2045220826)
+    public TopicData(String name, String title, String author, long created,
+            String subreddit, String thumbnail, int NumberOfComments, String url,
+            int ups) {
+        this.name = name;
+        this.title = title;
+        this.author = author;
+        this.created = created;
+        this.subreddit = subreddit;
+        this.thumbnail = thumbnail;
+        this.NumberOfComments = NumberOfComments;
+        this.url = url;
+        this.ups = ups;
+    }
+
+    @Generated(hash = 1711042654)
+    public TopicData() {
+    }
 
     public String getName() {
         return name;

@@ -44,7 +44,7 @@ public class DetailsActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayShowHomeEnabled(true);
 
             // Action bar title
-            getSupportActionBar().setTitle("A title");
+            getSupportActionBar().setTitle("Detailed view");
         }
 
         ButterKnife.bind(this);

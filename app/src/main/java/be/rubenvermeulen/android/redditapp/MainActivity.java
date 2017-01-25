@@ -14,12 +14,20 @@ import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import be.rubenvermeulen.android.redditapp.helpers.Category;
 import be.rubenvermeulen.android.redditapp.helpers.EndlessRecyclerOnScrollListener;
 import be.rubenvermeulen.android.redditapp.helpers.Subreddit;
+import be.rubenvermeulen.android.redditapp.models.App;
+import be.rubenvermeulen.android.redditapp.models.DaoSession;
 import be.rubenvermeulen.android.redditapp.models.Result;
 import be.rubenvermeulen.android.redditapp.models.Topic;
+import be.rubenvermeulen.android.redditapp.models.TopicData;
+import be.rubenvermeulen.android.redditapp.models.TopicDataDao;
 import be.rubenvermeulen.android.redditapp.services.RedditService;
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -44,6 +52,8 @@ public class MainActivity extends AppCompatActivity
     private String after = null;
     private Subreddit subreddit;
     private Category category = Category.hot;
+
+    private TopicDataDao topicDataDao;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -85,14 +95,39 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        // GreenDAO instrance
+        DaoSession daoSession = ((App) getApplication()).getDaoSession();
+        topicDataDao = daoSession.getTopicDataDao();
+
         // Get saved state
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         String value = sharedPreferences.getString("subreddit", null);
 
         if (value != null) {
             subreddit = Subreddit.valueOf(value);
-            loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
             getSupportActionBar().setTitle(subreddit.toString());
+
+            List<TopicData> topicDataList = topicDataDao.queryBuilder().list();
+
+            if (topicDataList.isEmpty()) {
+                loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
+            }
+            else {
+                // Remove cache
+                topicDataDao.deleteAll();
+
+                List<Topic> topicList = new ArrayList<>();
+                Topic t;
+                for (TopicData td : topicDataList) {
+                    t = new Topic();
+                    t.setData(td);
+
+                    topicList.add(t);
+                }
+
+                rvTopics.setAdapter(new TopicsAdapter(MainActivity.this, topicList));
+                Toast.makeText(this, "You're watching a cached version of this subreddit", Toast.LENGTH_LONG).show();
+            }
         }
     }
 
@@ -170,6 +205,7 @@ public class MainActivity extends AppCompatActivity
         }
 
         firstLoad = true;
+        after = null;
 
         Call<Result> call = service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD);
 
@@ -227,14 +263,20 @@ public class MainActivity extends AppCompatActivity
     protected void onStop() {
         super.onStop();
 
-        Log.e("STOP", "stopped");
-
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
 
         editor.putString("subreddit", subreddit.toString());
         editor.apply();
 
-        Log.e("SHARED", "Written");
+        // Save topics
+        List<TopicData> topicDataList = new ArrayList<>();
+        TopicsAdapter adapter = (TopicsAdapter) rvTopics.getAdapter();
+
+        for (Topic t : adapter.getTopics()) {
+            topicDataList.add(t.getData());
+        }
+
+        topicDataDao.insertInTx(topicDataList);
     }
 }
