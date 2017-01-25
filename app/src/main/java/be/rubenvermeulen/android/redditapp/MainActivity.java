@@ -113,9 +113,6 @@ public class MainActivity extends AppCompatActivity
                 loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
             }
             else {
-                // Remove cache
-                topicDataDao.deleteAll();
-
                 List<Topic> topicList = new ArrayList<>();
                 Topic t;
                 for (TopicData td : topicDataList) {
@@ -126,7 +123,7 @@ public class MainActivity extends AppCompatActivity
                 }
 
                 rvTopics.setAdapter(new TopicsAdapter(MainActivity.this, topicList));
-                Toast.makeText(this, "You're watching a cached version of this subreddit", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "You're watching a cached version of " + subreddit.toString(), Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -277,6 +274,10 @@ public class MainActivity extends AppCompatActivity
             topicDataList.add(t.getData());
         }
 
+        // Make sure table is empty (cache)
+        topicDataDao.deleteAll();
+
+        // Insert new data
         topicDataDao.insertInTx(topicDataList);
     }
 }
