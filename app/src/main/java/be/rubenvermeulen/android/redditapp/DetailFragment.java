@@ -1,10 +1,12 @@
 package be.rubenvermeulen.android.redditapp;
 
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
+import android.app.Fragment;
 import android.os.Bundle;
-import android.view.MenuItem;
+import android.support.annotation.Nullable;
+
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -16,7 +18,7 @@ import be.rubenvermeulen.android.redditapp.models.TopicData;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class DetailsActivity extends AppCompatActivity {
+public class DetailFragment extends Fragment {
 
     @BindView(R.id.cover)
     ImageView ivCover;
@@ -33,41 +35,31 @@ public class DetailsActivity extends AppCompatActivity {
     @BindView(R.id.created)
     TextView tvCreated;
 
+    public DetailFragment() {
+    }
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_details);
-
-        if (getSupportActionBar() != null) {
-            // Back button
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-
-            // Action bar title
-            getSupportActionBar().setTitle("Detailed view");
-        }
-
-        ButterKnife.bind(this);
-
-        bindData();
     }
 
+    @Nullable
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // handle arrow click here
-        if (item.getItemId() == android.R.id.home) {
-            finish(); // close this activity and return to preview activity (if there is any)
-        }
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View fragment = inflater.inflate(R.layout.fragment_detail, container, false);
 
-        return super.onOptionsItemSelected(item);
+        ButterKnife.bind(this, fragment);
+
+        TopicData topicData = getArguments().getParcelable("topicData");
+
+        bindObject(topicData);
+
+        return fragment;
     }
 
-    private void bindData() {
-        Intent intent = getIntent();
-        TopicData topicData = intent.getParcelableExtra("topic");
-
+    private void bindObject(TopicData topicData) {
         if (topicData.getThumbnail().startsWith("http")) {
-            Picasso.with(this).load(topicData.getThumbnail()).into(ivCover);
+            Picasso.with(getActivity()).load(topicData.getThumbnail()).into(ivCover);
             ivCover.setVisibility(View.VISIBLE);
         }
 

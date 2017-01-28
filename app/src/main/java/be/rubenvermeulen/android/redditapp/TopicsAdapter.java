@@ -11,7 +11,6 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
@@ -52,7 +51,7 @@ public class TopicsAdapter extends RecyclerView.Adapter {
 
     @Override
     public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.topics_item, parent, false);
+        View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.fragment_detail, parent, false);
 
         return new ViewHolder(v);
     }
@@ -77,8 +76,8 @@ public class TopicsAdapter extends RecyclerView.Adapter {
         viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(ctx, DetailsActivity.class);
-                intent.putExtra("topic", topicData);
+                Intent intent = new Intent(ctx, DetailActivity.class);
+                intent.putExtra("topicData", topicData);
 
                 ctx.startActivity(intent);
             }
