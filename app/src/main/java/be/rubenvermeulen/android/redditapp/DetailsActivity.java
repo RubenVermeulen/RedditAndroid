@@ -64,7 +64,7 @@ public class DetailsActivity extends AppCompatActivity {
 
     private void bindData() {
         Intent intent = getIntent();
-        TopicData topicData = (TopicData) intent.getSerializableExtra("TOPIC_DATA");
+        TopicData topicData = intent.getParcelableExtra("topic");
 
         if (topicData.getThumbnail().startsWith("http")) {
             Picasso.with(this).load(topicData.getThumbnail()).into(ivCover);

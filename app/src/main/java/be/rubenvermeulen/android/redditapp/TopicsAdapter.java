@@ -78,7 +78,7 @@ public class TopicsAdapter extends RecyclerView.Adapter {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(ctx, DetailsActivity.class);
-                intent.putExtra("TOPIC_DATA", topicData);
+                intent.putExtra("topic", topicData);
 
                 ctx.startActivity(intent);
             }

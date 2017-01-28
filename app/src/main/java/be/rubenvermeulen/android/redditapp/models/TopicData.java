@@ -1,18 +1,16 @@
 package be.rubenvermeulen.android.redditapp.models;
 
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.text.format.DateUtils;
 
 import com.google.gson.annotations.SerializedName;
 
 import org.greenrobot.greendao.annotation.Entity;
-
-import java.io.Serializable;
 import org.greenrobot.greendao.annotation.Generated;
 
 @Entity
-public class TopicData implements Serializable {
-    private static final long serialVersionUID = 0;
-
+public class TopicData implements Parcelable {
     private String name;
     private String title;
     private String author;
@@ -120,4 +118,46 @@ public class TopicData implements Serializable {
     public String getHumandReadableTimestamp() {
         return DateUtils.getRelativeTimeSpanString(created * 1000).toString();
     }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public TopicData(Parcel in) {
+        this.name = in.readString();
+        this.title = in.readString();
+        this.author = in.readString();
+        this.created = in.readLong();
+        this.subreddit = in.readString();
+        this.thumbnail = in.readString();
+        this.NumberOfComments = in.readInt();
+        this.url = in.readString();
+        this.ups = in.readInt();
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(name);
+        dest.writeString(title);
+        dest.writeString(author);
+        dest.writeLong(created);
+        dest.writeString(subreddit);
+        dest.writeString(thumbnail);
+        dest.writeInt(NumberOfComments);
+        dest.writeString(url);
+        dest.writeInt(ups);
+    }
+
+    public static final Parcelable.Creator<TopicData> CREATOR = new Creator<TopicData>() {
+        @Override
+        public TopicData createFromParcel(Parcel source) {
+            return new TopicData(source);
+        }
+
+        @Override
+        public TopicData[] newArray(int size) {
+            return new TopicData[size];
+        }
+    };
 }
