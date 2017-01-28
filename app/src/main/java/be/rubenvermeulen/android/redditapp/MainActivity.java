@@ -16,6 +16,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
 
+import org.greenrobot.greendao.async.AsyncOperation;
+import org.greenrobot.greendao.async.AsyncOperationListener;
+import org.greenrobot.greendao.async.AsyncSession;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,7 +57,7 @@ public class MainActivity extends AppCompatActivity
     private Subreddit subreddit;
     private Category category = Category.hot;
 
-    private TopicDataDao topicDataDao;
+    private DaoSession daoSession;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,9 +99,8 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
-        // GreenDAO instrance
-        DaoSession daoSession = ((App) getApplication()).getDaoSession();
-        topicDataDao = daoSession.getTopicDataDao();
+        // GreenDAO instance
+        daoSession = ((App) getApplication()).getDaoSession();
 
         // Get saved state
         SharedPreferences sharedPreferences = getPreferences(MODE_PRIVATE);
@@ -107,24 +110,23 @@ public class MainActivity extends AppCompatActivity
             subreddit = Subreddit.valueOf(value);
             getSupportActionBar().setTitle(subreddit.toString());
 
-            List<TopicData> topicDataList = topicDataDao.queryBuilder().list();
+            AsyncSession asyncSession = daoSession.startAsyncSession();
 
-            if (topicDataList.isEmpty()) {
-                loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
-            }
-            else {
-                List<Topic> topicList = new ArrayList<>();
-                Topic t;
-                for (TopicData td : topicDataList) {
-                    t = new Topic();
-                    t.setData(td);
+            asyncSession.setListener(new AsyncOperationListener() {
+                @Override
+                public void onAsyncOperationCompleted(AsyncOperation operation) {
+                    final List<TopicData> topicDataList = (List<TopicData>) operation.getResult();
 
-                    topicList.add(t);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            loadTopics(topicDataList);
+                        }
+                    });
                 }
+            });
 
-                rvTopics.setAdapter(new TopicsAdapter(MainActivity.this, topicList));
-                Toast.makeText(this, "You're watching a cached version of " + subreddit.toString(), Toast.LENGTH_LONG).show();
-            }
+            asyncSession.loadAll(TopicData.class);
         }
     }
 
@@ -275,9 +277,30 @@ public class MainActivity extends AppCompatActivity
         }
 
         // Make sure table is empty (cache)
-        topicDataDao.deleteAll();
+        AsyncSession asyncSession = daoSession.startAsyncSession();
+        asyncSession.deleteAll(TopicData.class);
 
         // Insert new data
-        topicDataDao.insertInTx(topicDataList);
+        asyncSession.insertInTx(TopicData.class, topicDataList);
+        //topicDataDao.insertInTx(topicDataList);
+    }
+
+    private void loadTopics(List<TopicData> topicDataList) {
+        if (topicDataList.isEmpty()) {
+            loadSubreddit(service.getSubreddit(subreddit.toString(), category.toString(), after, THRESHOLD));
+        }
+        else {
+            List<Topic> topicList = new ArrayList<>();
+            Topic t;
+            for (TopicData td : topicDataList) {
+                t = new Topic();
+                t.setData(td);
+
+                topicList.add(t);
+            }
+
+            rvTopics.setAdapter(new TopicsAdapter(MainActivity.this, topicList));
+            Toast.makeText(this, "You're watching a cached version of " + subreddit.toString(), Toast.LENGTH_LONG).show();
+        }
     }
 }
